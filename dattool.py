@@ -1,57 +1,36 @@
 """
-Modul DAT (Digitális földmérési AlatTérkép) adatcsere-állományok
+Modul DAT (Digitális földmérési AlapTérkép) adatcsere-állományok
 beolvasására és adataik kinyerésére.
-0.2 verzió
-Nagy Gábor, 2015
+1.0 verzió
+Nagy Gábor, 2019
 A modul a GNU GPL 3 feltételei szerint terjeszthető.
 """
 
+import os
+import json
 
-objcs= { "AA":[ ("alappont_id","N",5), ("obj_fels","AN",4), ("pont_szam","AN",20), ("pont_id","N",8), ("vizsz_alland1","N",2), ("pontvedo","N",2), ("vizsz_alland2","N",2), ("v_mag2","N",8), ("vizsz_alland3","N",2), ("v_mag3","N",8), ("meghat_mod","N",2), ("szemely_id","N",8), ("all_datum","D",0), ("elozo_alappont_id","N",5), ("blokk_file","AN",12), ("megsz_datum","D",0), ("tar_hely","AN",50), ("digit_hely","AN",50), ("jelkulcs","N",3), ("munkater_id","N",6)],
-         "AB":[ ("malapp_id","N",5), ("obj_fels","AN",4), ("mpont_szam","AN",20), ("pont_id","N",8), ("mag_alland","N",2), ("mag_allandfa","N",2), ("mag","N",8), ("meghat_mod","N",2), ("szemely_id","N",8), ("all_datum","D",0), ("elozo_malapp_id","N",5), ("blokk_file","AN",12), ("megsz_datum","D",0), ("tar_hely","AN",50), ("digit_hely","AN",50), ("jelkulcs","N",3), ("munkater_id","N",6)],
-         "AC":[ ("rpont_id","N",6), ("obj_fels","AN",4), ("pont_szam","AN",20), ("pont_id","N",8), ("vizsz_alland","N",2), ("meghat_mod","N",2), ("meghat_datum","D",0), ("elozo_rpont_id","N",6), ("megsz_datum","D",0), ("jelkulcs","N",3), ("munkater_id","N",6)],
-         "BA":[ ("kozig_idba","N",5), ("obj_fels","AN",4), ("felulet_id","N",8), ("kozig_id","N",4), ("kozig_kp","N",4), ("ceg_id","N",6), ("elhat_jell","N",1), ("elhat_mod","N",1), ("nemz_nev1","AN",20), ("nemz_nev2","AN",20), ("elozo_kozig_idba","N",5), ("kep_file","AN",24), ("megsz_datum","D",0), ("jelkulcs","N",3), ("munkater_id","N",6), ("pont_id","N",8)],
-         "BB":[ ("kozigal_id","N",6), ("obj_fels","AN",4), ("felulet_id","N",8), ("kozigal_nev","AN",20), ("kozid_id","N",4), ("l_datum","D",0), ("hatarozat","AN",20), ("elhat_jell","N",1), ("elhat_mod","N",1), ("elozo_kozigal_id","N",6), ("kep_file","AN",24), ("megsz_datum","D",0), ("jelkulcs","N",3), ("munkater_id","N",6), ("pont_id","N",8)],
-         "BC":[ ("parcel_id","N",8), ("obj_fels","AN",4), ("felulet_id","N",8), ("helyr_szam","AN",10), ("cim_id","N",8), ("fekves","N",1), ("kozter_jell","N",2), ("terulet","N",8), ("foldert","N",5), ("forg_ertek","N",6), ("szerv_tip","N",2), ("jogi_jelleg","N",3), ("jogallas","N",2), ("ceg_id","N",6), ("elhat_jell","N",1), ("elhat_mod","N",1), ("elozo_parcel_id","N",8), ("l_datum","D",0), ("hatarozat","AN",20), ("valt_jell","AN",20), ("tar_hely","AN",20), ("blokk_file","AN",12), ("megsz_datum","D",0), ("jelkulcs","N",3), ("munkater_id","N",6), ("pont_id","N",8)],
-         "BD":[ ("parcel_id","N",8), ("obj_fels","AN",4), ("felulet_id","N",8), ("helyr_szam","AN",10), ("cim_id","N",8), ("fekves","N",1), ("terulet","N",8), ("foldert","N",5), ("forg_ertek","N",6), ("szerv_tip","N",2), ("jogi_jelleg","N",3), ("jogallas","N",2), ("szemely_id","N",8), ("ceg_id","N",6), ("elhat_jell","N",1), ("elhat_mod","N",1), ("elozo_parcel_id","N",8), ("l_datum","D",0), ("hatarozat","AN",20), ("valt_jell","AN",20), ("tar_hely","AN",20), ("blokk_file","AN",12), ("megsz_datum","D",0), ("jelkulcs","N",3), ("munkater_id","N",6), ("pont_id","N",8)],
-         "BE":[ ("alreszlet_id","N",8), ("obj_fels","AN",4), ("felulet_id","N",8), ("alator","AN",3), ("helyr_szam","AN",10), ("terulet","N",8), ("foldert","N",5), ("muvel_ag","N",2), ("elhat_jell","N",1), ("elhat_mod","N",1), ("elozo_alreszlet_id","N",8), ("l_datum","D",0), ("hatarozat","AN",20), ("valt_jell","AN",20), ("tar_cim","AN",20), ("megsz_datum","D",0), ("jelkulcs","N",3), ("munkater_id","N",6), ("pont_id","N",8)],
-         "BF":[ ("moszt_id","N",8), ("obj_fels","AN",4), ("felulet_id","N",8), ("minoseg_oszt","N",2), ("muvel_ag","N",2), ("elhat_jell","N",1), ("elhat_mod","N",1), ("elozo_moszt_id","N",8), ("megsz_datum","D",0), ("jelkulcs","N",3), ("munkater_id","N",6), ("pont_id","N",8)],
-         "BG":[ ("eoi_id","N",8), ("obj_fels","AN",4), ("felulet_id","N",8), ("alator_eoi","AN",4), ("helyr_szam","AN",10), ("cim_eoi","N",8), ("kozter_jell","N",2), ("terulet","N",6), ("forg_ertek","N",6), ("szerv_tip","N",2), ("jogi_jelleg","N",3), ("jogallas","N",2), ("eoi_helyiseg","N",2), ("eoi_tulform","N",2), ("szemely_id","N",8), ("ceg_id","N",6), ("elhat_jell","N",1), ("elhat_mod","N",1), ("elozo_eoi_id","N",8), ("l_datum","D",0), ("hatarozat","AN",20), ("valt_jell","AN",20), ("tar_hely","AN",20), ("megsz_datum","D",0), ("jelkulcs","N",3), ("munkater_id","N",6), ("pont_id","N",8)],
-         "CA":[ ("ep_id","N",8), ("obj_fels","AN",4), ("felulet_id","N",8), ("ep_cim_id","N",6), ("parcel_id","N",6), ("ep_sorsz","N",4), ("szintek","N",2), ("fugg_kiter","N",3), ("anyag","N",2), ("epulet_tip","N",2), ("epulet_alt","N",2), ("szemely_id","N",8), ("ceg_id","N",6), ("elozo_ep_id","N",8), ("blokk_file","AN",12), ("t_obj_attric","N",8), ("megsz_datum","D",0), ("jelkulcs","N",3), ("munkater_id","N",6), ("pont_id","N",8)],
-         "CB":[ ("eptart_id","N",8), ("obj_fels","AN",4), ("obj_kiterj","N",1), ("geo_ae_id","N",8), ("ep_id","N",8), ("fugg_kiter","N",2), ("anyag","N",2), ("elozo_eptert_id","N",8), ("megsz_datum","D",0), ("jelkulcs","N",3), ("munkater_id","N",6), ("pont_id","N",8)],
-         "CC":[ ("kerit_id","N",6), ("obj_fels","AN",4), ("felulet_id","N",8), ("helyr_szam","AN",10), ("fugg_kiter","N",2), ("anyag","N",2), ("szemely_id","N",8), ("ceg_id","N",6), ("elozo_kerit_id","N",6), ("megsz_datum","D",0), ("jelkulcs","N",3), ("munkater_id","N",6), ("pont_id","N",8)],
-         "CD":[ ("terept_id","N",5), ("obj_fels","AN",4), ("obj_kiterj","N",1), ("geo_ae_id","N",8), ("helyr_szam","AN",10), ("fugg_kiter","N",2), ("anyag","N",2), ("szemely_id1","N",8), ("ceg_id1","N",6), ("szemely_id2","N",8), ("ceg_id2","N",6), ("elozo_terept_id","N",5), ("blokk_file","AN",12), ("megsz_datum","D",0), ("jelkulcs","N",3), ("munkater_id","N",6), ("pont_id","N",8)],
-         "CE":[ ("szobor_id","N",4), ("obj_fels","AN",4), ("obj_kiterj","N",1), ("geo_ae_id","N",8), ("helyr_szam","AN",10), ("kozter_nev","AN",5), ("fugg_kiter","N",2), ("anyag","N",2), ("ceg_id1","N",6), ("ceg_id2","N",6), ("elozo_szobor_id","N",4), ("blokk_file","AN",12), ("megsz_datum","D",0), ("jelkulcs","N",3), ("munkater_id","N",6), ("pont_id","N",8)],
-         "DA":[ ("kozut_az_id","N",4), ("obj_fels","AN",4), ("pont_id","N",8), ("szakag_sz","AN",10), ("kozuti_az","N",2), ("szak_nev","AN",5), ("ceg_id1","N",6), ("ceg_id2","N",6), ("elozo_kozut_az_id","N",4), ("megsz_datum","D",0), ("jelkulcs","N",3), ("munkater_id","N",6)],
-         "DB":[ ("kozl_let","N",6), ("obj_fels","AN",4), ("felulet_id","N",8), ("szak_nev","AN",5), ("pont_id","N",8), ("anyag_burk","N",2), ("jell_adat1","AN",4), ("jell_adat2","AN",4), ("jell_adat3","AN",4), ("ceg_id1","N",6), ("ceg_id2","N",6), ("elozo_kozl_let","N",6), ("megsz_datum","D",0), ("jelkulcs","N",3), ("munkater_id","N",6), ("pont_id2","N",8)],
-         "DC":[ ("kozl_let","N",6), ("obj_fels","AN",4), ("felulet_id","N",8), ("szak_nev","AN",5), ("anyag_burk","N",2), ("jell_adat1","AN",4), ("jell_adat2","AN",4), ("jell_adat3","AN",4), ("pont_id1","N",8), ("pont_id2","N",8), ("ceg_id1","N",6), ("ceg_id2","N",6), ("elozo_kozl_let","N",6), ("megsz_datum","D",0), ("jelkulcs","N",3), ("munkater_id","N",6), ("pont_id3","N",8)],
-         "DD":[ ("vasut_kp","N",5), ("obj_fels","AN",4), ("obj_kiterj","N",1), ("geo_ae_id","N",8), ("szak_nev","AN",5), ("pont_id1","N",8), ("pont_id2","N",8), ("kereszt","N",1), ("obj_az","N",8), ("obj_fels1","AN",4), ("pont_id3","N",8), ("ceg_id1","N",6), ("ceg_id2","N",6), ("elozo_vasut_kp","N",5), ("megsz_datum","D",0), ("jelkulcs","N",3), ("munkater_id","N",6), ("pont_id4","N",8)],
-         "DE":[ ("repter_id","N",3), ("obj_fels","AN",4), ("felulet_id","N",8), ("szak_nev","AN",5), ("repter_tip","N",2), ("repter_oszt","N",2), ("szak_nev","AN",5), ("ceg_id1","N",6), ("ceg_id2","N",6), ("elozo_repter_id","N",3), ("megsz_datum","D",0), ("jelkulcs","N",3), ("munkater_id","N",6), ("pont_id","N",8)],
-         "DF":[ ("mutargy","N",6), ("obj_fels","AN",4), ("obj_kiterj","N",1), ("geo_ae_id","N",8), ("szak_nev","AN",5), ("athid_szerk","N",2), ("anyag_burk","N",2), ("athid_allapot","N",2), ("athid_akad","N",2), ("ceg_id1","N",6), ("ceg_id2","N",6), ("elozo_mutargy","N",6), ("megsz_datum","D",0), ("jelkulcs","N",3), ("munkater_id","N",6), ("pont_id","N",8)],
-         "DG":[ ("mutargy","N",6), ("obj_fels","AN",4), ("obj_kiterj","N",1), ("geo_ae_id","N",8), ("szak_nev","AN",5), ("ceg_id1","N",6), ("ceg_id2","N",6), ("elozo_mutargy","N",6), ("megsz_datum","D",0), ("jelkulcs","N",3), ("munkater_id","N",6), ("pont_id","N",8)],
-         "EA":[ ("tavvez","N",5), ("obj_fels","AN",4), ("vonal_id","N",8), ("szak_nev","AN",5), ("ved_sav","N",3), ("korlat","N",3), ("jell_adat1","AN",4), ("jell_adat2","AN",4), ("jell_adat3","AN",4), ("pont_id1","N",8), ("pont_id2","N",8), ("kereszt","N",1), ("obj_az","N",6), ("obj_fels1","AN",4), ("pont_id3","N",8), ("ceg_id1","N",6), ("ceg_id2","N",6), ("elozo_tavvez","N",5), ("megsz_datum","D",0), ("jelkulcs","N",3), ("munkater_id","N",6), ("pont_id4","N",8)],
-         "EB":[ ("mutargy","N",6), ("obj_fels","AN",4), ("obj_kiterj","N",1), ("geo_ae_id","N",8), ("szak_nev","AN",5), ("ved_sav","N",3), ("korlat","N",3), ("jell_adat","N",3), ("ceg_id1","N",6), ("ceg_id2","N",6), ("elozo_mutargy","N",6), ("megsz_datum","D",0), ("jelkulcs","N",3), ("munkater_id","N",6), ("pont_id","N",8)],
-         "FA":[ ("viz","N",5), ("obj_fels","AN",4), ("felulet_id","N",8), ("vobj_fo_al","N",4), ("jell_adat1","AN",4), ("jell_adat2","AN",4), ("jell_adat3","AN",4), ("pont_id1","N",8), ("pont_id2","N",8), ("kereszt","N",1), ("obj_az","N",6), ("obj_fels1","AN",4), ("pont_id3","N",8), ("ceg_id1","N",6), ("ceg_id2","N",6), ("elozo_viz","N",5), ("megsz_datum","D",0), ("jelkulcs","N",3), ("munkater_id","N",6), ("pont_id4","N",8)],
-         "FB":[ ("viz_kozmu","N",5), ("obj_fels","AN",4), ("obj_kiterj","N",1), ("geo_ae_id","N",8), ("vobj_fo_al","N",4), ("ved_sav","N",3), ("korlat","N",3), ("jell_adat1","AN",4), ("jell_adat2","AN",4), ("jell_adat3","AN",4), ("pont_id1","N",8), ("pont_id2","N",8), ("kereszt","N",1), ("obj_az","N",6), ("obj_fels1","AN",4), ("pont_id3","N",8), ("ceg_id1","N",6), ("ceg_id2","N",6), ("elozo_viz_kozmu","N",5), ("megsz_datum","D",0), ("jelkulcs","N",3), ("munkater_id","N",6), ("pont_id4","N",8)],
-         "FC":[ ("viz_mut","N",5), ("obj_fels","AN",4), ("obj_kiterj","N",1), ("geo_ae_id","N",8), ("vobj_fo_al","N",4), ("korlat","N",3), ("jell_adat1","AN",4), ("jell_adat2","AN",4), ("jell_adat3","AN",4), ("ceg_id1","N",6), ("ceg_id2","N",6), ("elozo_viz_mut","N",5), ("mgsz_datum","D",0), ("jelkulcs","N",3), ("munkater_id","N",6), ("pont_id","N",8)],
-         "GA":[ ("szintvo","N",5), ("obj_fels","AN",4), ("obj_kiterj","N",1), ("geo_ae_id","N",8), ("elozo_szintvo","N",5), ("megsz_datum","D",0), ("jelkulcs","N",3), ("munkater_id","N",6), ("pont_id","N",8)],
-         "GB":[ ("domb","N",5), ("obj_fels","AN",4), ("obj_kiterj","N",1), ("geo_ae_id","N",8), ("pont_id1","N",8), ("pont_id2","N",8), ("elozo_domb","N",5), ("megsz_datum","D",0), ("jelkulcs","N",3), ("munkater_id","N",6), ("pont_id","N",8)],
-         "HA":[ ("munkater_id","N",6), ("obj_fels","AN",4), ("felulet_id","N",8), ("felm_tan","AN",150), ("mu_terv","AN",150), ("mu_leir","AN",150), ("torzskonyv","AN",150), ("forras","AN",150), ("munkareszek","AN",150), ("kezd_datum","D",0), ("felm_datum","D",0), ("hitel_datum","D",0), ("adatgy1","AN",1), ("adatgy2","AN",1), ("adatgy3","AN",1), ("ceg_id1","N",6), ("szemely_id1","N",8), ("munkater_ny_m","AN",20), ("ceg_id2","N",6), ("szemely_id2","N",8), ("munkater_ny_f","AN",20), ("ceg_id3","N",6), ("szemely_id3","N",8), ("munkater_ny_h","AN",20), ("munkater_id_knt","AN",12), ("szemely_id4","N",6), ("pont_id","N",8)],
-         "HB":[ ("nyterulet","N",3), ("obj_fels","AN",4), ("felulet_id","N",8), ("nyt_nev","AN",30), ("ceg_id1","N",6), ("szemely_id2","N",8), ("kezd_datum","D",0), ("bef_datum","D",0), ("pont_id","N",8)],
-         "HC":[ ("terseg","N",4), ("obj_fels","AN",4), ("felulet_id","N",8), ("ter_nev","AN",30), ("ceg_id1","N",6), ("ceg_id2","N",6), ("kezd_datum","D",0), ("szemely_id3","N",8), ("elozo_terseg","N",4), ("megsz_datum","D",0), ("pont_id","N",8)]}
+tamogatott_datver=sorted([fl[3:11] for fl in os.listdir(os.path.dirname(__file__)) if fl[:3]=='dat' and fl.endswith('.json')])
 
-objcskodl=list(objcs.keys())
+def datver(datfilenev,  enc='latin-1'):
+    """DAT állomány verziójának megállapítása"""
+    dtf=open(datfilenev,  'r',  encoding=enc)
+    cimrek=dtf.readline()
+    cimmez=cimrek[:-1].split('*')[:-1]
+    if len(cimmez)==7:
+        return '19961227'
+    elif len(cimmez)==9:
+        return cimmez[8].split(' ')[0].replace('.', '')
+    else:
+        raise ValueError('Hibás címrekord')
+    dtf.close()
 
-objgeom={'AA':('P',3), 'AB':('P',3), 'AC':('P',3),
-         'BA':('F',3), 'BB':('F',3), 'BC':('F',3), 'BD':('F',3), 'BE':('F',3), 'BF':('F',3), 'BG':('F',3),
-         'CA':('F',3), 'CB':('X',3,4), 'CC':('F', 3), 'CD':('X',3,4), 'CE':('X',3,4),
-         'DA':('P',3), 'DB':('F',3), 'DC':('F',3), 'DD':('X',3,4), 'DE':('F',3), 'DF':('X',3,4), 'DG':('X',3,4),
-         'EA':('V',3), 'EB':('X',3,4),
-         'FA':('F',3), 'FB':('X',3,4), 'FC':('X',3,4),
-         'GA':('X',3,4), 'GB':('X',3,4),
-         'HA':('F',3), 'HB':('F',3), 'HC':('F',3)}
-
-
+def autover(filever):
+    """A legjobban illeszkedő támogatott DAT verzió megállapítása"""
+    nagyobbver=[v for v in tamogatott_datver if int(filever)<=int(v)]
+    if len(nagyobbver)==0:
+        return tamogatott_datver[-1]
+    else:
+        return nagyobbver[0]
 
 def adat_formaz(adat, forma):
     if adat=='':
@@ -68,10 +47,14 @@ def adat_formaz(adat, forma):
         else:
             print('Hibás adatleírás:',adat,forma)
 
-
 def adat_sqldef(mezo):
     if mezo[1]=='N':
-        return mezo[0]+" decimal("+str(mezo[2])+",0)"
+        if len(mezo)==3:
+            return mezo[0]+" decimal("+str(mezo[2])+",0)"
+        elif len(mezo)==4:
+            return mezo[0]+" decimal("+str(mezo[2])+","+str(mezo[3])+")"
+        else:
+            raise ValueError('Szabálytalan mezőlírás:'+str(mezo))
     elif mezo[1]=='AN':
         return mezo[0]+" char("+str(mezo[2])+")"
     elif mezo[1]=='D':
@@ -91,10 +74,101 @@ def koord2wkt2d(koord):
 def koord2wkt3d(koord):
     return str(koord[0])+' '+str(koord[1])+' '+str(koord[2])
 
+
+class DatSql:
+    """Osztály a DAT adatokat fogadó adatbázis fajtájára és beállításaira"""
+    
+    def __init__(self,  dbtip='PostGIS', dbver=10.0, sfver=2.3, indextip='default',  nezettip='view'):
+        if dbtip.lower()=='postgis':
+            self._db='postgres'
+            self._sfsql='postgis'
+            if indextip.lower()=='noindex':
+                self._spidx='noindex'
+            elif indextip.lower() in ('gist',  'default'):
+                self._spidx='GIST'
+            elif indextip.lower()=='brin':
+                self._spidx='BRIN'
+            else:
+                ValueError('A "'+indextip+'" típusú index a PostGIS adatbázisokban nem támogatott!')
+        elif dbtip.lower()=='spatialite':
+            self._db='sqlite'
+            self._sfsql='spatialite'
+            if indextip.lower()=='noindex':
+                self._spidx='noindex'
+            elif indextip.lower()=='default':
+                self._spidx='default'
+            else:
+                ValueError('A "'+indextip+'" típusú index a SpatiaLite adatbázisokban nem támogatott!')
+        elif dbtip.lower()=='geopackage':
+            self._db='sqlite'
+            self._sfsql='geopackage'
+            raise ValueError('A GeoPackage pillanatnyilag még nem támogatott!')
+        else:
+            raise ValueError('A "'+dbtip+'" adatbázistípus nem támogatott!')
+        self._dbver=float(dbver)
+        self._sfver=float(sfver)
+        self.set_nezettip(nezettip)
+            
+    def set_nezettip(self,  ujnezettip):
+        """Új nézettípus beállítása"""
+        if ujnezettip.lower()=='view':
+            self._nezettip='view'
+        elif ujnezettip.lower()[:5]=='mview' and self._db=='postgres':
+            self._nezettip='mview'
+            if ujnezettip.lower()=='mview+index':
+                self._nezetidx=True
+            else:
+                self._nezetidx=False
+        else:
+            raise ValueError('Ismeretlen nézettípus a '+self._db+' adatbázishoz:"'+ujnezettip+'"')
+            
+    def createspatialindex(self,  tbl,  geomcol,  indexnev=None):
+        """Egy térbeli indexet létrehozó SQL utasítás előállítása"""
+        if indexnev==None:
+            idxnev=tbl.replace('.', '_')+"_"+geomcol
+        else:
+            idxnev=indexnev
+        if self._spidx=='noindex':
+            return ''
+        if self._sfsql=='postgis':
+            return "CREATE INDEX "+idxnev+" ON "+tbl+" USING "+self._spidx+" ("+geomcol+");\n"
+        if self._sfsql=='spatialite':
+            return "SELECT CreateSpatialIndex('"+tbl+"', '"+geomcol+"');\n"
+            
+    def createspatialtable(self,  tbl,  normcols,  geomcols,  primkey=(1, )):
+        """Egy (opcionálisan) térbeli adatokat is tartalmazó tábla létrehozását végző SQL utasítások előállítása"""
+        addgeomfunc=not(self._sfsql=='postgis' and self._sfver>=2.3)
+        coldefs=[adat_sqldef(mezo) for mezo in normcols]
+        if not addgeomfunc:
+            coldefs+=[gc[1]+" Geometry("+gc[0]+('', 'Z')[gc[2]-2]+","+str(gc[3])+")" for gc in geomcols]
+        coldefs.append("PRIMARY KEY ("+", ".join([normcols[col-1][0] for col in primkey])+")")
+        creastr="CREATE TABLE "+tbl+" ("+", ".join(coldefs)+");\n"
+        if addgeomfunc:
+            for gc in geomcols:
+                creastr+="SELECT AddGeometryColumn('"+tbl+"', '"+gc[1]+"', "+str(gc[3])+", '"+gc[0]+"', "+str(gc[2])+");\n"
+        for gc in geomcols:
+            creastr+=self.createspatialindex(tbl,  gc[1])
+        return creastr
+        
+    def createview(self,  vnev,  lekerdezes,  geomcols,  idxcols=[]):
+        """Egy (opcionálisan) térbeli adatokat is tartalmazó nézet létrehozása"""
+        if self._nezettip=='view':
+            creastr="CREATE VIEW "+vnev+" AS "+lekerdezes+";\n"
+        else:
+            creastr="CREATE MATERIAL VIEW "+vnev+" AS "+lekerdezes+";\n"
+        if self._nezettip=='mview+index':
+            for idxcol in idxcols:
+                creastr+="CREATE INDEX "+vnev+'_'+idxcol+" ON "+vnev+" ("+idxcol+");\n"
+            for geomcol in geomcols:
+                creastr+=self.createspatialindex(vnev,  geomcol)
+        return creastr
+
+
 class Datfile:
-    "Osztály egy DAT állomány kezelésére."
+    """Osztály egy DAT állomány kezelésére."""
+    
     def urit(self):
-        "A Datfile objektum tartalmának kiürítése."
+        """A Datfile objektum tartalmának kiürítése."""
         self._cimrekord=[]
         self._pont={}
         self._von={}
@@ -103,15 +177,29 @@ class Datfile:
         self._felulet={}
         self._hattp={}
         self._attr={}
-        for objcskod in objcskodl:
+        for objcskod in self.objcskodl:
             self._attr[objcskod]=[]
 
-    def __init__(self):
-        "Új Datfile objektum létrehozása"
+    def __init__(self,  datver='19961227'):
+        """Új Datfile objektum létrehozása"""
+        #Szabályzattól függő adatok beolvasása
+        datszabfile=open(os.path.dirname(__file__)+'/dat'+datver+'.json')
+        datszab=json.load(datszabfile)
+        datszabfile.close()
+        self.cimrekord=datszab['cimrekord']
+        self.objcs=datszab['objcs']
+        self.objgeom=datszab['objgeom']
+        self.objpt=datszab['objpt']
+        self.geomdefdim=datszab['geomdefdim']
+        self.ptdefdim=datszab['ptdefdim']
+        self.objcskodl=list(self.objcs.keys())
+        #Egyéb adatok beállítása
+        self.srid=23700
+        #Az állomány adatait tároló attribútumok létrehozása vagy törlése
         self.urit()
 
     def beolvas(self, datfilenev, enc='latin-1'):
-        "Egy DAT adatcsere-állomány adatainak beolvasása"
+        """Egy DAT adatcsere-állomány adatainak beolvasása"""
         datfile=open(datfilenev, 'r', encoding=enc)
         self.urit()
         tablanev=''
@@ -119,7 +207,7 @@ class Datfile:
             datmez=datsor.split('*')[:-1]
             if len(datmez)==1:
                 tablanev=datmez[0]
-            if tablanev=='':
+            elif tablanev=='':
                 self._cimrekord=datmez
             elif tablanev=='T_PONT' and len(datmez)==6:
                 if datmez[3]=='':
@@ -170,21 +258,21 @@ class Datfile:
         datfile.close()
 
     def ptkoord(self, ptid):
-        "Egy pont koordinátáinak lekérdezése azonosítók alapján."
+        """Egy pont koordinátáinak lekérdezése azonosítók alapján."""
         if ptid in self._pont:
             return (self._pont[ptid][0], self._pont[ptid][1], self._pont[ptid][2])
         else:
             return False
 
     def ptwkt(self, ptid, dim=2):
-        "Egy megatott azonosítójú pont WKT formátumban."
+        """Egy megatott azonosítójú pont WKT formátumban."""
         if ptid in self._pont:
             return 'POINT('+koord2wkt(self._pont[ptid], dim)+')'
         else:
             return ''
 
     def vonptid(self, vonid):
-        "Adott azonosítójú vonal töréspontjainak pontazonosítója egy listában."
+        """Adott azonosítójú vonal töréspontjainak pontazonosítója egy listában."""
         ret=[]
         if vonid in self._von:
             idl=sorted(self._von[vonid].keys())
@@ -194,11 +282,11 @@ class Datfile:
         return ret
 
     def vonptkoord(self, vonid):
-        "Adott azonosítójú vonal töréspontjainak koordinátái egy listában."
+        """Adott azonosítójú vonal töréspontjainak koordinátái egy listában."""
         return list(map(self.ptkoord, self.vonptid(vonid)))
 
     def vonwkt(self, vonid, dim=2):
-        "Egy megadott azonosítójú vonal WKT formátumban."
+        """Egy megadott azonosítójú vonal WKT formátumban."""
         if dim==2:
             wktfunc=koord2wkt2d
         else:
@@ -206,7 +294,7 @@ class Datfile:
         return 'LINESTRING('+','.join(map(wktfunc, self.vonptkoord(vonid)))+')'
 
     def hatvonptid(self, hatvonid, irany='+'):
-        "Adott azonosítójú határvonal töréspontjainak pontazonosítója egy listában."
+        """Adott azonosítójú határvonal töréspontjainak pontazonosítója egy listában."""
         if irany=='+':
             revsort=False
             idxi=1
@@ -224,7 +312,7 @@ class Datfile:
         return ret
 
     def hatarptid(self, hatid, zart=True):
-        "Adott azonosítójú határ töréspontjainak pontazonosítója egy listában."
+        """Adott azonosítójú határ töréspontjainak pontazonosítója egy listában."""
         ret=[]
         if hatid in self._hatar:
             for i in sorted(self._hatar[hatid].keys()):
@@ -234,11 +322,11 @@ class Datfile:
         return ret
 
     def hatarptkoord(self, hatid, zart=True):
-        "Adott azonosítójú határ töréspontjainak koordinátái egy listában"
+        """Adott azonosítójú határ töréspontjainak koordinátái egy listában"""
         return list(map(self.ptkoord, self.hatarptid(hatid, zart)))
 
     def feluletpt(self, felid, zart=True):
-        "Egy megadott azonosítójú felület pontjainak azonosítói"
+        """Egy megadott azonosítójú felület pontjainak azonosítói"""
         if not felid in self._felulet:
             return [[]]
         mpoli=[]
@@ -254,7 +342,7 @@ class Datfile:
         return mpoli
 
     def feluletkoord(self, felid, zart=True):
-        "Egy megadott azonosítójú felület pontjainak koordinátái"
+        """Egy megadott azonosítójú felület pontjainak koordinátái"""
         if not felid in self._felulet:
             return [[]]
         mpoli=[]
@@ -270,7 +358,7 @@ class Datfile:
         return mpoli
 
     def feluletwkt(self, felid, dim=2, nomulti=False):
-        "Egy megadott azonosítójú felület WKT formátumban."
+        """Egy megadott azonosítójú felület WKT formátumban."""
         if dim==2:
             wktfunc=koord2wkt2d
         else:
@@ -289,61 +377,157 @@ class Datfile:
         return wkt
 
     def attradat(self, objcskod):
-        "Megadott kódú objektumcsoport attribútumtáblájának adatai"
+        """Megadott kódú objektumcsoport attribútumtáblájának adatai"""
         if objcskod in self._attr:
             return self._attr[objcskod]
         else:
             return [[]]
 
     def attr_lehetseges(self):
-        "Az összes objektumcsoport kódja"
-        return list(objcs.keys())
+        """Az összes objektumcsoport kódja"""
+        return list(self.objcskodl)
 
     def attr_nemures(self):
-        "Az összes az állományban használt objektumcsoport kódja"
-        return list(filter(lambda x: len(self._attr[x])>0,objcs.keys()))
+        """Az összes az állományban használt objektumcsoport kódja"""
+        return list(filter(lambda x: len(self._attr[x])>0,self.objcskodl))
 
-    def createtbl(self, objcsop, tblnev, geomnev='geom', dim=2, geomindex='PostGIS', tobbgeom=True, srid=23700):
-        "Egy adott kódú objektumcsoport tábláját létrehozó SQL utasítások"
+    def regi_createtbl(self, objcsop, tblnev, geomnev='geom', objdim='defdim', ptdim='defdim',  sfsql='PostGIS', tobbgeom='egybe', ptcol=None):
+        """Egy adott kódú objektumcsoport tábláját vagy tábláit létrehozó SQL utasítások"""
         if not objcsop in self.attr_lehetseges():
             return "-- "+objcsop+" objektumcsoport nem létezik!"
-        mezok=objcs[objcsop]
+        if tobbgeom.lower()[:10]=='kulontabla' and self.objgeom[objcsop][0]=='X':
+            if tobbgeom.lower() in ('kulontabla/view',  'kulontabla/mview'):
+                if tobbgeom.lower()=='kulontabla/mview' and sfsql.lower[:7]=='postgis':
+                    viewmod=' MATERIALIZED '
+                    viewidx='CREATE INDEX '+tblnev+'_'+geomnev+' ON '+tblnev+' USING GIST ('+geomnev+');\n'
+                else:
+                    viewmod=' '
+                    viewidx=''
+                creanezet='CREATE'+viewmod+'VIEW '+tblnev+' AS\nSELECT * FROM '+tblnev+'_pt\nUNION\nSELECT * FROM '+tblnev+'_von\nUNION\nSELECT * FROM '+tblnev+'_fel;\n'
+            else:
+                creanezet=''
+            return self.createtbl(objcsop,  tblnev+'_pt',  tobbgeom='csakpt',  geomnev=geomnev,  objdim=objdim,  ptdim=ptdim,  sfsql=sfsql, ptcol=ptcol)+\
+            self.createtbl(objcsop,  tblnev+'_von',  tobbgeom='csakvon',  geomnev=geomnev,  objdim=objdim,  ptdim=ptdim,  sfsql=sfsql, ptcol=ptcol)+\
+            self.createtbl(objcsop,  tblnev+'_fel',  tobbgeom='csakfel',  geomnev=geomnev,  objdim=objdim,  ptdim=ptdim,  sfsql=sfsql, ptcol=ptcol)+creanezet+viewidx
+        if objdim=='defdim':
+            objkdim=self.geomdefdim[objcsop]
+        elif objdim in (2, 3):
+            objkdim=objdim
+        else:
+            ValueError('Szabálytalan érték az objektum koordinátáinak dimenziószámára:'+str(objdim))
+        if ptdim=='defdim':
+            ptkdim=self.ptdefdim[objcsop]
+        elif ptdim in (0, 2, 3):
+            ptkdim=ptdim
+        else:
+            ValueError('Szabálytalan érték az objektumhoz rendelt pont koordinátáinak dimenziószámára:'+str(ptdim))
+        mezok=self.objcs[objcsop]
         if objcsop in self.attr_nemures():
             mintasor=self.attradat(objcsop)[0]
             if len(mezok)>len(mintasor):
                 mezok=mezok[:len(mintasor)]
-        coldefs=list(map(adat_sqldef, mezok))
+        coldefs=[adat_sqldef(mezo) for mezo in mezok]
         coldefs[0]+=" PRIMARY KEY"
         sqlstr="CREATE TABLE "+tblnev+" ("+", ".join(coldefs)+");\n"
-        if dim in [2, 3]:
-            geomtip=[]
-            if mezok[2][0] in ['pont_id', 'pont_szam', 'mpont_szam']:
-                geomtip=[('POINT', '')]
-            elif mezok[2][0]=='vonal_id':
-                geomtip=[('LINESTRING', '')]
-            elif mezok[2][0]=='felulet_id':
-                geomtip=[('MULTIPOLYGON', '')]
-            elif mezok[2][0]=='obj_kiterj':
-                if tobbgeom:
-                    geomtip=[('POINT', '_pt'), ('LINESTRING', '_von'), ('MULTIPOLYGON', '_fel')]
-                else:
-                    geomtip=[('GEOMETRY', '')]
-            if geomtip==[]: print(objcsop, mezok)
-            for gtp in geomtip:
-                sqlstr+="SELECT AddGeometryColumn('"+tblnev.lower()+"', '"+geomnev+gtp[1]+"', "+str(srid)+", '"+gtp[0]+"', "+str(dim)+");\n"
-                if geomindex=='PostGIS':
-                    sqlstr+="CREATE INDEX "+tblnev.lower()+"_"+geomnev+gtp[1]+" ON "+tblnev.lower()+" USING GIST ("+geomnev+gtp[1]+");\n"
-                elif geomindex=='SpatiaLite':
-                    sqlstr+="SELECT CreateSpatialIndex('"+tblnev.lower()+"','"+geomnev+gtp[1]+"');\n"
+        if self.objgeom[objcsop][0]=='P' or tobbgeom.lower()=='csakpt':
+            geomtip=[('POINT',  geomnev,  objkdim,  self.srid)]
+        elif self.objgeom[objcsop][0]=='V' or tobbgeom.lower()=='csakvon':
+            geomtip=[('LINESTRING',  geomnev,  objkdim,  self.srid)]
+        elif self.objgeom[objcsop][0]=='F' or tobbgeom.lower()=='csakfel':
+            geomtip=[('MULTIPOLYGON',  geomnev,  objkdim,  self.srid)]
+        elif self.objgeom[objcsop][0]=='X':
+            if tobbgeom.lower()[:11]=='kulonoszlop':
+                geomtip=[('POINT', geomnev+'_pt',  objkdim,  self.srid),
+                ('LINESTRING', geomnev+'_von',  objkdim,  self.srid),
+                ('MULTIPOLYGON', geomnev+'_fel',  objkdim,  self.srid)]
+            else:
+                geomtip=[('GEOMETRY', geomnev,  objkdim,  self.srid)]
+        if ptcol!=None and objcsop in self.objpt and ptkdim!=0:
+            geomtip.append(('POINT',  ptcol,  ptkdim))
+        for gtp in geomtip:
+            sqlstr+="SELECT AddGeometryColumn('"+tblnev.lower()+"', '"+gtp[1]+"', "+str(self.srid)+", '"+gtp[0]+"', "+str(gtp[2])+");\n"
+            if sfsql.lower()[:7]=='postgis':
+                sqlstr+="CREATE INDEX "+tblnev.lower()+"_"+gtp[1]+" ON "+tblnev.lower()+" USING GIST ("+gtp[1]+");\n"
+            elif sfsql.lower()[:10]=='spatialite':
+                sqlstr+="SELECT CreateSpatialIndex('"+tblnev.lower()+"','"+gtp[1]+"');\n"
+        if tobbgeom.lower() in ('egyben/view', 'egyben/mview') and self.objgeom[objcsop][0]=='X':
+            if tobbgeom.lower()=='egyben/mview' and sfsql.lower()[:7]=='postgis':
+                viewmod=' MATERIALIZED '
+            else:
+                viewmod=' '
+            kiterjmez=self.objcs[objcsop][self.objgeom[objcsop][1]][0]
+            sqlstr+='CREATE'+viewmod+'VIEW '+tblnev+'_pt  AS SELECT * FROM '+tblnev+' WHERE '+kiterjmez+'=1;\n'
+            sqlstr+='CREATE'+viewmod+'VIEW '+tblnev+'_von AS SELECT * FROM '+tblnev+' WHERE '+kiterjmez+'=2;\n'
+            sqlstr+='CREATE'+viewmod+'VIEW '+tblnev+'_fel AS SELECT * FROM '+tblnev+' WHERE '+kiterjmez+'=3;\n'
+            if viewmod==' MATERIALIZED ':
+                sqlstr+='CREATE INDEX '+tblnev+'_ptgeom  ON '+tblnev+'_pt  USING GIST ('+geomnev+');\n'
+                sqlstr+='CREATE INDEX '+tblnev+'_vongeom ON '+tblnev+'_von USING GIST ('+geomnev+');\n'
+                sqlstr+='CREATE INDEX '+tblnev+'_felgeom ON '+tblnev+'_fel USING GIST ('+geomnev+');\n'
         return sqlstr
+        
+    def createtbl(self, dbtipus,  objcsop, tblnev, geomnev='geom', objdim='defdim', ptdim='defdim', tobbgeom=('egyben', ),  ptcol=None):
+        """Egy adott kódú objektumcsoport tábláját vagy tábláit létrehozó SQL utasítások"""
+        if not objcsop in self.attr_lehetseges():
+            return "-- "+objcsop+" objektumcsoport nem létezik!"
+        if objdim=='defdim':
+            objkdim=self.geomdefdim[objcsop]
+        elif objdim in (2, 3):
+            objkdim=int(objdim)
+        else:
+            ValueError('Szabálytalan érték az objektum koordinátáinak dimenziószámára:'+str(objdim))
+        if ptdim=='defdim':
+            ptkdim=self.ptdefdim[objcsop]
+        elif ptdim in (0, 2, 3):
+            ptkdim=ptdim
+        else:
+            ValueError('Szabálytalan érték az objektumhoz rendelt pont koordinátáinak dimenziószámára:'+str(ptdim))
+        mezok=self.objcs[objcsop]
+        if objcsop in self.attr_nemures():
+            mintasor=self.attradat(objcsop)[0]
+            if len(mezok)>len(mintasor):
+                mezok=mezok[:len(mintasor)]
+        if ptcol!=None and objcsop in self.objpt and ptkdim!=0:
+            ptgeomdef=[('POINT',  ptcol,  ptkdim,  self.srid)]
+        else:
+            ptgeomdef=[]
+        if tobbgeom[0].lower()=='kulontabla' and self.objgeom[objcsop][0]=='X':
+            return dbtipus.createspatialtable(tblnev+'_pt',  mezok,  [('POINT',  geomnev,  objkdim,  self.srid)]+ptgeomdef)+\
+            dbtipus.createspatialtable(tblnev+'_von',  mezok,  [('LINESTRING',  geomnev,  objkdim,  self.srid)]+ptgeomdef)+\
+            dbtipus.createspatialtable(tblnev+'_fel',  mezok,  [('MULTIPOLYGON',  geomnev,  objkdim,  self.srid)]+ptgeomdef)
+        if self.objgeom[objcsop][0]=='P':
+            geomcols=[('POINT',  geomnev,  objkdim,  self.srid)]
+        elif self.objgeom[objcsop][0]=='V':
+            geomcols=[('LINESTRING',  geomnev,  objkdim,  self.srid)]
+        elif self.objgeom[objcsop][0]=='F':
+            geomcols=[('MULTIPOLYGON',  geomnev,  objkdim,  self.srid)]
+        elif self.objgeom[objcsop][0]=='X':
+            if tobbgeom[0].lower()=='kulonoszlop':
+                geomcols=[('POINT', geomnev+'_pt',  objkdim,  self.srid),
+                ('LINESTRING', geomnev+'_von',  objkdim,  self.srid),
+                ('MULTIPOLYGON', geomnev+'_fel',  objkdim,  self.srid)]
+            else:
+                geomcols=[('GEOMETRY', geomnev,  objkdim,  self.srid)]
+        return dbtipus.createspatialtable(tblnev,  mezok,  geomcols+ptgeomdef)
 
-    def insertsor(self, objcsop, tblnev, adatsor, geomnev='geom', dim=2, tobbgeom=True, srid=23700):
-        "Egy adott objektumcsoport egy objektumának adatait beszúró SQL utasítás"
+    def insertsor(self, objcsop, tblnev, adatsor, geomnev='geom', objdim='defdim', ptdim='defdim',  tobbgeom=('egyben', ), ptcol=None):
+        """Egy adott objektumcsoport egy objektumának adatait beszúró SQL utasítás"""
+        if objdim=='defdim':
+            objkdim=self.geomdefdim[objcsop]
+        elif objdim in (2, 3):
+            objkdim=objdim
+        else:
+            ValueError('Szabálytalan érték az objektum koordinátáinak dimenziószámára:'+str(objdim))
+        if ptdim=='defdim':
+            ptkdim=self.ptdefdim[objcsop]
+        elif ptdim in (0, 2, 3):
+            ptkdim=ptdim
+        else:
+            ValueError('Szabálytalan érték az objektumhoz rendelt pont koordinátáinak dimenziószámára:'+str(ptdim))
         if not objcsop in self.attr_lehetseges():
             return "-- A "+objcsop+" objektumcsoport nem létezik!"
         if len(adatsor)<5:
             return "-- A "+objcsop+" objektumcsoport táblájába beszúrandó sor nem tartalmaz elég adatot!"
-        mezok=objcs[objcsop]
+        mezok=self.objcs[objcsop]
         sor=adatsor
         if len(mezok)>len(sor):
             mezok=mezok[:len(sor)]
@@ -354,38 +538,43 @@ class Datfile:
         for i in range(len(sor)):
             meznevek.append(mezok[i][0])
             adatok.append(adat_formaz(sor[i], mezok[i]))
-        if dim in [2, 3]:
-            gmeznev=geomnev
-            if mezok[2][0]=='pont_id':
-                wkt=self.ptwkt(int(sor[2]), dim=dim)
-            if mezok[2][0] in ['pont_szam', 'mpont_szam']:
-                wkt=self.ptwkt(int(sor[3]), dim=dim)
-            elif mezok[2][0]=='vonal_id':
-                wkt=self.vonwkt(int(sor[2]), dim=dim)
-            elif mezok[2][0]=='felulet_id':
-                wkt=self.feluletwkt(int(sor[2]), dim=dim)
-            elif mezok[2][0]=='obj_kiterj':
-                if int(sor[2])==1:
-                    if tobbgeom:
-                        gmeznev+='_pt'
-                    wkt=self.ptwkt(int(sor[3]), dim=dim)
-                elif int(sor[2])==2:
-                    if tobbgeom:
-                        gmeznev+='_von'
-                    wkt=self.vonwkt(int(sor[3]), dim=dim)
-                elif int(sor[2])==3:
-                    if tobbgeom:
-                        gmeznev+='_fel'
-                    wkt=self.feluletwkt(int(sor[3]), dim=dim)
-            meznevek.append(gmeznev)
-            adatok.append("GeomFromEWKT('SRID="+str(srid)+";"+wkt+"')")
-        return "INSERT INTO "+tblnev+" ("+", ".join(meznevek)+") VALUES ("+", ".join(adatok)+");"
+        gmeznev=geomnev
+        tblutan=''
+        if self.objgeom[objcsop][0]=='P':
+            wkt=self.ptwkt(int(sor[self.objgeom[objcsop][1]]), dim=objkdim)
+        elif self.objgeom[objcsop][0]=='V':
+            wkt=self.vonwkt(int(sor[self.objgeom[objcsop][1]]), dim=objkdim)
+        elif self.objgeom[objcsop][0]=='F':
+            wkt=self.feluletwkt(int(sor[self.objgeom[objcsop][1]]), dim=objkdim)
+        elif self.objgeom[objcsop][0]=='X':
+            if int(sor[self.objgeom[objcsop][1]])==1:
+                if tobbgeom[0]=='kulonoszlop': gmeznev+='_pt'
+                if tobbgeom[0]=='kulontabla': tblutan='_pt'
+                wkt=self.ptwkt(int(sor[self.objgeom[objcsop][2]]), dim=objkdim)
+            elif int(sor[self.objgeom[objcsop][1]])==2:
+                if tobbgeom[0]=='kulonoszlop': gmeznev+='_von'
+                if tobbgeom[0]=='kulontabla': tblutan='_von'
+                wkt=self.vonwkt(int(sor[self.objgeom[objcsop][2]]), dim=objkdim)
+            elif int(sor[self.objgeom[objcsop][1]])==3:
+                if tobbgeom[0]=='kulonoszlop': gmeznev+='_fel'
+                if tobbgeom[0]=='kulontabla': tblutan='_fel'
+                wkt=self.feluletwkt(int(sor[self.objgeom[objcsop][2]]), dim=objkdim)
+        meznevek.append(gmeznev)
+        adatok.append("GeomFromEWKT('SRID="+str(self.srid)+";"+wkt+"')")
+        if ptcol!=None and objcsop in self.objpt and ptkdim!=0:
+            meznevek.append(ptcol)
+            objptwkt=self.ptwkt(int(sor[self.objgeom[objcsop][1]]), dim=ptkdim)
+            if objptwkt!='':
+                adatok.append("GeomFromEWKT('SRID="+str(self.srid)+";"+objptwkt+"')")
+            else:
+                adatok.append("NULL")
+        return "INSERT INTO "+tblnev+tblutan+" ("+", ".join(meznevek)+") VALUES ("+", ".join(adatok)+");"
 
-    def insertsorok(self, objcsop, tblnev, geomnev='geom', dim=2, tobbgeom=True, srid=23700):
-        "Egy adott objektumcsoport összes az állományban megtalálható elemét beszúró SQL utasítások"
+    def insertsorok(self, objcsop, tblnev, geomnev='geom', objdim='defdim', ptdim='defdim',  tobbgeom='egybe', ptcol=None):
+        """Egy adott objektumcsoport összes az állományban megtalálható elemét beszúró SQL utasítások"""
         if not objcsop in self.attr_lehetseges():
             return "-- "+objcsop+" objektumcsoport nem létezik!"
         inssorok=[]
         for sor in self._attr[objcsop]:
-            inssorok.append(self.insertsor(objcsop, tblnev, sor, geomnev=geomnev, dim=dim, tobbgeom=tobbgeom, srid=srid))
+            inssorok.append(self.insertsor(objcsop, tblnev, sor, geomnev=geomnev, objdim=objdim, ptdim=ptdim,  tobbgeom=tobbgeom, ptcol=ptcol))
         return "\n".join(inssorok)
